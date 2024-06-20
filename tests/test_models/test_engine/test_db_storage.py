@@ -67,7 +67,6 @@ test_db_storage.py'])
             self.assertTrue(len(func[1].__doc__) >= 1,
                             "{:s} method needs a docstring".format(func[0]))
 
-
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
@@ -78,11 +77,55 @@ class TestFileStorage(unittest.TestCase):
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_no_class(self):
         """Test that all returns all rows when no class is passed"""
+        new_obj = Amenity(name='jajanken')
+        models.storage.new(new_obj)
+        self.assertIn(f'Amenity.{new_obj.id}', models.storage.all())
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_new(self):
         """test that new adds an object to the database"""
+        new_obj = Amenity(name='jajanken')
+        models.storage.new(new_obj)
+        self.assertIn(f'Amenity.{new_obj.id}', models.storage.all(Amenity))
+
+        init_len = len(models.storage.all())
+        new_obj = Amenity(name='California')
+        new_obj2 = Amenity(name='California123')
+        models.storage.new(new_obj)
+        models.storage.new(new_obj2)
+
+        self.assertEqual(init_len + 2, len(models.storage.all()))
+
+        self.assertIn(f'{new_obj.__class__.__name__}.{new_obj.id}',
+                      models.storage.all().keys())
+
+        self.assertIn(new_obj, models.storage.all().values())
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-    def test_save(self):
-        """Test that save properly saves objects to file.json"""
+    def test_count(self):
+        """test count method"""
+        init_len = len(models.storage.all())
+        self.assertEqual(models.storage.count(), init_len)
+        self.assertEqual(models.storage.count(None), init_len)
+
+        self.assertEqual(models.storage.count(int), 0)
+
+        init_len = len(models.storage.all(State))
+        self.assertEqual(models.storage.count(State), init_len)
+
+        self.assertIs(type(models.storage.count(State)), int)
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
+    def test_get(self):
+        """test get method"""
+        new_obj = Amenity(name='jajanken')
+        models.storage.new(new_obj)
+        self.assertIs(models.storage.get(Amenity, new_obj.id), new_obj)
+
+        self.assertIsNone(models.storage.get(None, None))
+
+        self.assertIsNone(models.storage.get(None, new_obj.id))
+        self.assertIsNone(models.storage.get(State, None))
+        self.assertIsNotNone(models.storage.get(Amenity, new_obj.id))
+        self.assertIsNone(models.storage.get(Amenity, 123))
+        self.assertIsNone(models.storage.get(State, new_obj.id))
