@@ -1,0 +1,7 @@
+
+mkdir -p api/v1/views
+touch api/__init__.py
+touch api/v1/__init__.py
+touch api/v1/views/__init__.py
+touch api/v1/views/index.py
+touch api/v1/app.py
